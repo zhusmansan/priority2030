@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="infoBeautified.json"></script>
+    <!-- <script type="text/javascript" src="info_first.json"></script> -->
+    <script type="module">
+      import { JSONPath } from "https://cdn.jsdelivr.net/npm/jsonpath-plus@7.2.0/dist/index-browser-esm.min.js";
+      function  load() {
+        var tbody = document.getElementById("userdataBody");
+        for (let p of data.data.participants) {
+          let edPolicy = p.info.sections.find(
+            (v) => v.name == "Образовательная политика"
+          );
+          const result = JSONPath({
+            path: "$..props.items[?(@.label && @.value)]",
+            json: p.info,
+          });
+          console.log(result);
+          tbody.innerHTML += `<tr>
+          <td>${p.shortName}</td>
+          
+          </tr>`;
+        }
+      };
+      load();
+    </script>
+    
+  </head>
+
+  <body onload="">
+    <div class="wrapper">
+      <div class="profile">
+        <table id="userdata" border="2">
+          <thead>
+            <th>Название вуза</th>
+            <th>Last Name</th>
+            <th>Email Address</th>
+            <th>City</th>
+          </thead>
+          <tbody id="userdataBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
