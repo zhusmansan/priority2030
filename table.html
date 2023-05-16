@@ -5,41 +5,84 @@
     <!-- <script type="text/javascript" src="info_first.json"></script> -->
     <script type="module">
       import { JSONPath } from "https://cdn.jsdelivr.net/npm/jsonpath-plus@7.2.0/dist/index-browser-esm.min.js";
-      function  load() {
-        var tbody = document.getElementById("userdataBody");
-        for (let p of data.data.participants) {
-          let edPolicy = p.info.sections.find(
-            (v) => v.name == "Образовательная политика"
-          );
-          const result = JSONPath({
-            path: "$..props.items[?(@.label && @.value)]",
-            json: p.info,
-          });
-          console.log(result);
-          tbody.innerHTML += `<tr>
-          <td>${p.shortName}</td>
-          
-          </tr>`;
+
+      function isPrimitive(test) {
+        return test !== Object(test);
+      }
+      function findNode(matcherFn, currentNode) {
+        var i, currentChild, result;
+
+        if (matcherFn(currentNode)) {
+          return currentNode;
+        } else {
+          // Use a for loop instead of forEach to avoid nested functions
+          // Otherwise "return" will not work properly
+          if (!isPrimitive(currentNode))
+            for (let currentChild of Object.values(currentNode)) {
+              // Search in the current child
+              result = findNode(matcherFn, currentChild);
+
+              // Return the result if the node has been found
+              if (result !== false) {
+                return result;
+              }
+            }
+
+          // The node has not been found and we have no more options
+          return false;
         }
-      };
+      }
+
+      function load() {
+        var tbody = document.getElementById("documentBody");
+
+        let donutChartNames = JSONPath({
+          path: "$..props.title",
+          json: data,
+        });
+
+        //deduplicate array
+        donutChartNames = [...new Set(donutChartNames)];
+        for (let chartName of donutChartNames) {
+          let chart = findNode((node) => {
+            return node?.title == chartName;
+          }, data.data);
+
+          tbody.innerHTML += `<h1>${chartName}</h1><br>`;
+          tbody.innerHTML += ['Название ВУЗа',...chart.items.map((v)=>{return v.label;})].join(";");
+          tbody.innerHTML += '<br>';
+          for (let p of data.data.participants) {
+            let c = findNode((node) => {
+              return node?.title == chartName;
+            }, p);
+            if(c){
+              tbody.innerHTML +=[p.shortName,...c.items.map((v)=>{return v.value;})].join(";");
+              tbody.innerHTML += '<br>';
+            }
+            console.log(c);
+          }
+        }
+
+        // console.log(donutChartNames);
+
+        // for (let p of data.data.participants) {
+        //   let edPolicy = p.info.sections.find(
+        //     (v) => v.name == "Образовательная политика"
+        //   );
+        //   const result = JSONPath({
+        //     path: "$..props.items[?(@.label && @.value)]",
+        //     json: p.info,
+        //   });
+        //   // console.log(result);
+        //   tbody.innerHTML += `<tr>
+        //   <td>${p.shortName}</td>
+
+        //   </tr>`;
+        // }
+      }
       load();
     </script>
-    
   </head>
 
-  <body onload="">
-    <div class="wrapper">
-      <div class="profile">
-        <table id="userdata" border="2">
-          <thead>
-            <th>Название вуза</th>
-            <th>Last Name</th>
-            <th>Email Address</th>
-            <th>City</th>
-          </thead>
-          <tbody id="userdataBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </body>
+  <body id="documentBody" onload=""></body>
 </html>

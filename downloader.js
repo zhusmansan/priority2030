@@ -1,5 +1,4 @@
 const fetch = require("node-fetch");
-// import fetch from 'node-fetch';
 
 const LIST_URL = "https://lk.priority2030.ru/api/v0/priority/list";
 
